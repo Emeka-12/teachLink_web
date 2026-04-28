@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkRoutePermission } from './middleware/rbac';
 import { applySecurityHeaders } from './middleware/security';
+import { applyCspHeaders } from './middleware/csp';
 import { UserRole } from './types/api';
 
 export function middleware(request: NextRequest) {
@@ -12,10 +13,12 @@ export function middleware(request: NextRequest) {
 
   const permissionResponse = checkRoutePermission(request, userRole);
   if (permissionResponse) {
-    return applySecurityHeaders(permissionResponse, request);
+    const withSecurity = applySecurityHeaders(permissionResponse, request);
+    return applyCspHeaders(withSecurity, request);
   }
 
-  return applySecurityHeaders(NextResponse.next(), request);
+  const response = applySecurityHeaders(NextResponse.next(), request);
+  return applyCspHeaders(response, request);
 }
 
 // See "Matching Paths" below to learn more
