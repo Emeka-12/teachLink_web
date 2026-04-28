@@ -203,7 +203,11 @@ export function createSubscriptionClient(config: SubscriptionConfig): ApolloClie
         manager.resetRetryCount();
       },
       error: (error) => {
-        manager.setState(ConnectionState.ERROR, error);
+        const normalizedError =
+          error instanceof Error
+            ? error
+            : new Error(typeof error === 'string' ? error : 'Unknown error');
+        manager.setState(ConnectionState.ERROR, normalizedError);
       },
       closed: () => {
         manager.setState(ConnectionState.DISCONNECTED);

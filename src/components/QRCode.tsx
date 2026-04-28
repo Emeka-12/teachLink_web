@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, forwardRef } from 'react';
-import QRCode from 'qrcode.react';
+import { useCallback, useEffect, useRef, forwardRef } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { QRCodeOptions, DEFAULT_QR_OPTIONS } from '@/utils/generate-qr';
 
 export interface QRCodeComponentProps {
@@ -51,15 +51,29 @@ export const QRCodeComponent = forwardRef<HTMLCanvasElement, QRCodeComponentProp
     },
     ref,
   ) => {
-    const localRef = useRef<HTMLCanvasElement>(null);
-    const canvasRef = (ref || localRef) as React.RefObject<HTMLCanvasElement>;
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Handle render callback
-    const handleRender = () => {
-      if (onRender && canvasRef.current) {
-        onRender(canvasRef.current);
+    const getCanvasElement = () => containerRef.current?.querySelector('canvas') ?? null;
+
+    const assignForwardedRef = useCallback(
+      (canvas: HTMLCanvasElement | null) => {
+        if (!ref) return;
+        if (typeof ref === 'function') {
+          ref(canvas);
+        } else {
+          ref.current = canvas;
+        }
+      },
+      [ref],
+    );
+
+    useEffect(() => {
+      const canvas = getCanvasElement();
+      assignForwardedRef(canvas);
+      if (onRender && canvas) {
+        onRender(canvas);
       }
-    };
+    }, [assignForwardedRef, onRender, value, size, level, includeMargin, bgColor, fgColor]);
 
     if (!value) {
       return (
@@ -73,16 +87,14 @@ export const QRCodeComponent = forwardRef<HTMLCanvasElement, QRCodeComponentProp
     }
 
     return (
-      <div className={`qr-code-container ${className}`}>
-        <QRCode
-          ref={canvasRef}
+      <div ref={containerRef} className={`qr-code-container ${className}`}>
+        <QRCodeCanvas
           value={value}
           size={size}
           level={level}
           includeMargin={includeMargin}
           bgColor={bgColor}
           fgColor={fgColor}
-          onRender={handleRender}
         />
       </div>
     );

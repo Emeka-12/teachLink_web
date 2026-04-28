@@ -8,12 +8,16 @@ import {
 } from '@/lib/feature-flags/store';
 import type { FeatureFlag, TargetingRule } from '@/lib/feature-flags/store';
 import { withRateLimit } from '@/lib/ratelimit';
+import { edgeLog } from '@/../infra/edge-config';
+
+export const runtime = 'edge';
 
 // ─── GET /api/admin/feature-flags ─────────────────────────────────────────────
 // Returns the full flag list sorted by updatedAt desc.
 
 export async function GET(req: NextRequest) {
-  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'API');
+  edgeLog('info', '/api/admin/feature-flags', 'GET request received');
+  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'READ');
   if (rateLimitResponse) return rateLimitResponse;
 
   const flags = Array.from(flagStore.values()).sort(
@@ -27,7 +31,8 @@ export async function GET(req: NextRequest) {
 // Creates a new flag.
 
 export async function POST(req: NextRequest) {
-  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'AUTH');
+  edgeLog('info', '/api/admin/feature-flags', 'POST request received');
+  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse;
 
   const body = await req.json().catch(() => null);
@@ -43,10 +48,9 @@ export async function POST(req: NextRequest) {
     name: body.name.trim(),
     description: typeof body.description === 'string' ? body.description.trim() : '',
     enabled: false,
-    strategy: ['all', 'percentage', 'targeting'].includes(body.strategy)
-      ? body.strategy
-      : 'all',
-    percentage: typeof body.percentage === 'number' ? Math.max(0, Math.min(100, body.percentage)) : 0,
+    strategy: ['all', 'percentage', 'targeting'].includes(body.strategy) ? body.strategy : 'all',
+    percentage:
+      typeof body.percentage === 'number' ? Math.max(0, Math.min(100, body.percentage)) : 0,
     rules: Array.isArray(body.rules) ? (body.rules as TargetingRule[]) : [],
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
     createdAt: now,
