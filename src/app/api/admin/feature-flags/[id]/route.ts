@@ -5,6 +5,7 @@ import {
 } from '@/lib/feature-flags/store';
 import type { FeatureFlag, TargetingRule } from '@/lib/feature-flags/store';
 import { withRateLimit } from '@/lib/ratelimit';
+import { logAuditMutation } from '@/middleware/audit';
 
 // ─── GET /api/admin/feature-flags/[id] ───────────────────────────────────────
 
@@ -12,7 +13,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'API');
+  const { addHeaders, rateLimitResponse } = withRateLimit(req, 'READ');
   if (rateLimitResponse) return rateLimitResponse;
 
   const { id } = await params;
@@ -60,7 +61,16 @@ export async function PUT(
     : 'updated';
   createAuditEntry(action, actor, existing, updated);
 
-  return addHeaders(NextResponse.json({ flag: updated }));
+  const response = addHeaders(NextResponse.json({ flag: updated }));
+  logAuditMutation(req, {
+    action: 'update',
+    targetType: 'feature-flag',
+    targetId: updated.id,
+    statusCode: response.status,
+    metadata: { action },
+  });
+
+  return response;
 }
 
 // ─── DELETE /api/admin/feature-flags/[id] ────────────────────────────────────
@@ -80,5 +90,14 @@ export async function DELETE(
   flagStore.delete(id);
   createAuditEntry('deleted', actor, existing, null);
 
-  return addHeaders(NextResponse.json({ message: 'Deleted' }));
+  const response = addHeaders(NextResponse.json({ message: 'Deleted' }));
+  logAuditMutation(req, {
+    action: 'delete',
+    targetType: 'feature-flag',
+    targetId: id,
+    statusCode: response.status,
+    metadata: { name: existing.name },
+  });
+
+  return response;
 }

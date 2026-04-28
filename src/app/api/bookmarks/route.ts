@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { VideoBookmark, ApiResponse, SuccessResponse } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
+import { logAuditMutation } from '@/middleware/audit';
 
 type PersistedVideoBookmark = VideoBookmark;
 
@@ -72,7 +73,16 @@ export async function POST(request: Request) {
   const next = [persisted, ...prev.filter((b) => b.id !== persisted.id)];
   bookmarksStore.set(key, next);
 
-  return addHeaders(NextResponse.json({ success: true, data: persisted }));
+  const response = addHeaders(NextResponse.json({ success: true, data: persisted }));
+  logAuditMutation(request, {
+    action: 'create',
+    targetType: 'video-bookmark',
+    targetId: persisted.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response;
 }
 
 export async function PATCH(request: Request) {
@@ -113,7 +123,17 @@ export async function PATCH(request: Request) {
   );
 
   bookmarksStore.set(key, next);
-  return addHeaders(NextResponse.json({ success: true }));
+
+  const response = addHeaders(NextResponse.json({ success: true }));
+  logAuditMutation(request, {
+    action: 'update',
+    targetType: 'video-bookmark',
+    targetId: body.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response;
 }
 
 export async function DELETE(request: Request) {
@@ -136,5 +156,14 @@ export async function DELETE(request: Request) {
     prev.filter((b) => b.id !== body.id),
   );
 
-  return addHeaders(NextResponse.json({ success: true }));
+  const response = addHeaders(NextResponse.json({ success: true }));
+  logAuditMutation(request, {
+    action: 'delete',
+    targetType: 'video-bookmark',
+    targetId: body.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response;
 }

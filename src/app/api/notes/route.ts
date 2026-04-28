@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { VideoNote, ApiResponse, SuccessResponse } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
+import { logAuditMutation } from '@/middleware/audit';
 
 type PersistedVideoNote = VideoNote;
 
@@ -68,7 +69,16 @@ export async function POST(request: Request) {
   const next = [persisted, ...prev.filter((n) => n.id !== persisted.id)];
   notesStore.set(key, next);
 
-  return addHeaders(NextResponse.json({ success: true, data: persisted }));
+  const response = addHeaders(NextResponse.json({ success: true, data: persisted }));
+  logAuditMutation(request, {
+    action: 'create',
+    targetType: 'video-note',
+    targetId: persisted.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response;
 }
 
 export async function PATCH(request: Request) {
@@ -107,7 +117,17 @@ export async function PATCH(request: Request) {
   );
 
   notesStore.set(key, next);
-  return addHeaders(NextResponse.json({ success: true }));
+
+  const response = addHeaders(NextResponse.json({ success: true }));
+  logAuditMutation(request, {
+    action: 'update',
+    targetType: 'video-note',
+    targetId: body.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response;
 }
 
 export async function DELETE(request: Request) {
@@ -120,7 +140,16 @@ export async function DELETE(request: Request) {
   if (!body?.lessonId || !body?.id) {
     return addHeaders(
       NextResponse.json({ success: false, message: 'Invalid payload' }, { status: 400 }),
-    );
+  const response = addHeaders(NextResponse.json({ success: true }));
+  logAuditMutation(request, {
+    action: 'delete',
+    targetType: 'video-note',
+    targetId: body.id,
+    statusCode: response.status,
+    metadata: { lessonId: body.lessonId },
+  });
+
+  return response
   }
 
   const key = keyFor(body.userId, body.lessonId);
