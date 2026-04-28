@@ -8,6 +8,11 @@ import { InternationalizationEngine } from '@/components/i18n/Internationalizati
 import { CulturalAdaptationManager } from '@/components/i18n/CulturalAdaptationManager';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { RouteChangeAnnouncer } from '@/components/accessibility/RouteChangeAnnouncer';
+import {
+  LegacyStorePreferencesBridge,
+  RemoteSettingsSync,
+  ThemeFromSettingsBootstrap,
+} from '@/components/settings/SettingsOrchestration';
 import { ErrorBoundary } from '@/components/errors/ErrorBoundarySystem';
 import { EnvGuard } from '@/components/shared/EnvGuard';
 import { FeatureFlagProvider } from '@/components/shared/FeatureFlagProvider';
@@ -61,6 +66,9 @@ export function RootProviders({ children, defaultTheme }: RootProvidersProps) {
       <InternationalizationEngine>
         <CulturalAdaptationManager>
           <ThemeProvider defaultTheme={defaultTheme}>
+            <ThemeFromSettingsBootstrap />
+            <LegacyStorePreferencesBridge />
+            <RemoteSettingsSync />
             <Suspense fallback={null}>
               <DynamicTheming />
             </Suspense>
