@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkRoutePermission } from './middleware/rbac';
+import { applySecurityHeaders } from './middleware/security';
 import { UserRole } from './types/api';
 
 export function middleware(request: NextRequest) {
@@ -11,13 +12,13 @@ export function middleware(request: NextRequest) {
 
   const permissionResponse = checkRoutePermission(request, userRole);
   if (permissionResponse) {
-    return permissionResponse;
+    return applySecurityHeaders(permissionResponse, request);
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next(), request);
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/admin/:path*', '/instructor/:path*', '/dashboard/:path*', '/profile/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

@@ -3,6 +3,21 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        {
+          key: 'Permissions-Policy',
+          value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+        },
+        { key: 'X-DNS-Prefetch-Control', value: 'off' },
+      ],
+    },
+  ],
   eslint: {
     // Many legacy files do not match Prettier; keep type checking without blocking production builds.
     ignoreDuringBuilds: true,
