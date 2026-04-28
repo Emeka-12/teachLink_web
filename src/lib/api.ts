@@ -1,5 +1,6 @@
-import { ApiError, parseApiError } from '@/utils/error-handler';
-import { ErrorType, ErrorInfo } from '@/utils/errorUtils';
+import { ApiError, parseApiError } from '../utils/error-handler';
+import { ErrorType, ErrorInfo } from '../utils/errorUtils';
+import { API_VERSION_HEADER, DEFAULT_API_VERSION, getVersionedApiPath } from './apiVersioning';
 
 export type { ErrorInfo };
 
@@ -39,6 +40,7 @@ export interface ApiClientConfig {
   timeout?: number;
   maxRetries?: number;
   retryDelay?: number;
+  apiVersion?: string;
 }
 
 function statusToErrorType(status: number): ErrorType {
@@ -88,6 +90,7 @@ class ApiClientImpl {
       timeout: config.timeout || DEFAULT_TIMEOUT_MS,
       maxRetries: config.maxRetries || MAX_RETRIES,
       retryDelay: config.retryDelay || RETRY_DELAY_MS,
+      apiVersion: config.apiVersion || DEFAULT_API_VERSION,
     };
   }
 
@@ -169,6 +172,7 @@ class ApiClientImpl {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(config.headers as Record<string, string>),
+      [API_VERSION_HEADER]: this.config.apiVersion,
     };
 
     try {
@@ -178,7 +182,9 @@ class ApiClientImpl {
         signal: controller.signal,
       });
 
-      const url = this.config.baseURL ? `${this.config.baseURL}${config.url}` : config.url;
+      const baseURL = this.config.baseURL.replace(/\/+$/, '');
+      const resolvedUrl = getVersionedApiPath(config.url);
+      const url = baseURL ? `${baseURL}${resolvedUrl}` : resolvedUrl;
 
       const response = await fetch(url, processedConfig);
       clearTimeout(timer);
