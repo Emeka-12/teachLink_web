@@ -40,6 +40,9 @@ export function makeCourse(overrides: Partial<Course> = {}): Course {
     progress: 0,
     duration: '4h 30m',
     category: 'Engineering',
+    totalLessons: 10,
+    size: 'Small',
+    downloaded: false,
     ...overrides,
   };
 }

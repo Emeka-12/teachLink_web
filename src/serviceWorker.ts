@@ -136,5 +136,5 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clientsClaim());
+  event.waitUntil(clientsClaim() as any);
 });
