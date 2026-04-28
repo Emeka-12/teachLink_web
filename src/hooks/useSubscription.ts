@@ -91,8 +91,14 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
   options: UseSubscriptionOptions & { variables?: TVariables } = {},
   client?: ApolloClient<any>,
 ): UseSubscriptionResult<TData> {
-  const { skip = false, onConnect, onDisconnect, onError, onData, shouldResubscribe = true } =
-    options;
+  const {
+    skip = false,
+    onConnect,
+    onDisconnect,
+    onError,
+    onData,
+    shouldResubscribe = true,
+  } = options;
 
   const [data, setData] = useState<TData | undefined>();
   const [loading, setLoading] = useState(!skip);
@@ -149,7 +155,8 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         error: (err: any) => {
           setLoading(false);
 
-          const apolloError = err instanceof ApolloError ? err : new ApolloError({ errorMessage: err.message });
+          const apolloError =
+            err instanceof ApolloError ? err : new ApolloError({ errorMessage: err.message });
           setError(apolloError);
 
           if (isConnectionError(err)) {
@@ -240,8 +247,8 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     error instanceof ApolloError
       ? error.message || 'Subscription error'
       : error instanceof SubscriptionError
-        ? formatSubscriptionError(error)
-        : error?.message || null;
+      ? formatSubscriptionError(error)
+      : error?.message || null;
 
   return {
     data,
@@ -344,7 +351,7 @@ export function usePollableSubscription<TData = any, TVariables extends Operatio
         pollTimeoutRef.current = null;
       }
     };
-  }, [pollFn, pollIntervalMs, subscriptionResult.connectionState, subscriptionResult.updateData]);
+  }, [pollFn, pollIntervalMs, subscriptionResult.connectionState, subscriptionResult.updateData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     ...subscriptionResult,

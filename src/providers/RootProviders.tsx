@@ -57,39 +57,39 @@ interface RootProvidersProps {
 export function RootProviders({ children, defaultTheme }: RootProvidersProps) {
   return (
     <FeatureFlagProvider>
-    <I18nProvider>
-      <InternationalizationEngine>
-        <CulturalAdaptationManager>
-          <ThemeProvider defaultTheme={defaultTheme}>
-            <Suspense fallback={null}>
-              <DynamicTheming />
-            </Suspense>
-            <EnvGuard>
-              <AccessibilityProvider pageLabel="TeachLink - main application">
-                <RouteChangeAnnouncer />
-                <Suspense fallback={null}>
-                  <PerformanceMonitoringProvider>
-                    <OfflineModeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={null}>
-                          <PWAManager />
-                          <StateManagerIntegration />
-                          <PerformanceMonitor />
-                          <PrefetchingEngine />
-                        </Suspense>
-                        <ErrorBoundary>
-                          <Suspense fallback={<Loading />}>{children}</Suspense>
-                        </ErrorBoundary>
-                      </ToastProvider>
-                    </OfflineModeProvider>
-                  </PerformanceMonitoringProvider>
-                </Suspense>
-              </AccessibilityProvider>
-            </EnvGuard>
-          </ThemeProvider>
-        </CulturalAdaptationManager>
-      </InternationalizationEngine>
-    </I18nProvider>
+      <I18nProvider>
+        <InternationalizationEngine>
+          <CulturalAdaptationManager>
+            <ThemeProvider defaultTheme={defaultTheme}>
+              <Suspense fallback={null}>
+                <DynamicTheming />
+              </Suspense>
+              <EnvGuard>
+                <AccessibilityProvider pageLabel="TeachLink - main application">
+                  <RouteChangeAnnouncer />
+                  <Suspense fallback={null}>
+                    <PerformanceMonitoringProvider>
+                      <OfflineModeProvider>
+                        <ToastProvider>
+                          <Suspense fallback={null}>
+                            <PWAManager />
+                            <StateManagerIntegration />
+                            <PerformanceMonitor />
+                            <PrefetchingEngine />
+                          </Suspense>
+                          <ErrorBoundary>
+                            <Suspense fallback={<Loading />}>{children}</Suspense>
+                          </ErrorBoundary>
+                        </ToastProvider>
+                      </OfflineModeProvider>
+                    </PerformanceMonitoringProvider>
+                  </Suspense>
+                </AccessibilityProvider>
+              </EnvGuard>
+            </ThemeProvider>
+          </CulturalAdaptationManager>
+        </InternationalizationEngine>
+      </I18nProvider>
     </FeatureFlagProvider>
   );
 }

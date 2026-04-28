@@ -30,7 +30,7 @@ export interface QRCodeComponentProps {
  *
  * @example
  * ```tsx
- * <QRCodeComponent 
+ * <QRCodeComponent
  *   value="https://teachlink.com/post/123"
  *   size={256}
  *   fgColor="#3b82f6"
@@ -63,7 +63,10 @@ export const QRCodeComponent = forwardRef<HTMLCanvasElement, QRCodeComponentProp
 
     if (!value) {
       return (
-        <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
+        <div
+          className={`flex items-center justify-center ${className}`}
+          style={{ width: size, height: size }}
+        >
           <p className="text-sm text-gray-500">No value provided</p>
         </div>
       );
