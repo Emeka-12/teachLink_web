@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { I18nextProvider } from 'react-i18next';
 import { ThemeProvider } from '@/lib/theme-provider';
 import { I18nProvider } from '@/hooks/useInternationalization';
 import { InternationalizationEngine } from '@/components/i18n/InternationalizationEngine';
@@ -13,6 +14,7 @@ import { EnvGuard } from '@/components/shared/EnvGuard';
 import { FeatureFlagProvider } from '@/components/shared/FeatureFlagProvider';
 import { ToastProvider } from '@/context/ToastContext';
 import { Loading } from '@/components/ui/Loading';
+import i18n from '@/lib/i18n/config';
 
 // Lazy load heavy/non-critical providers/components to improve initial render time
 const OfflineModeProvider = dynamic(
@@ -48,16 +50,19 @@ const DynamicTheming = dynamic(() => import('@/components/theme/DynamicTheming')
 interface RootProvidersProps {
   children: React.ReactNode;
   defaultTheme: string;
+  /** Locale read from cookie server-side; used to initialise i18n before hydration. */
+  defaultLocale?: string;
 }
 
 /**
  * Consolidates all client-side providers and components to reduce layout complexity
  * and enables lazy loading of non-critical systems.
  */
-export function RootProviders({ children, defaultTheme }: RootProvidersProps) {
+export function RootProviders({ children, defaultTheme, defaultLocale = 'en' }: RootProvidersProps) {
   return (
+    <I18nextProvider i18n={i18n}>
     <FeatureFlagProvider>
-    <I18nProvider>
+      <I18nProvider defaultLanguage={defaultLocale as import('@/locales/types').LanguageCode}>
       <InternationalizationEngine>
         <CulturalAdaptationManager>
           <ThemeProvider defaultTheme={defaultTheme}>
@@ -89,7 +94,8 @@ export function RootProviders({ children, defaultTheme }: RootProvidersProps) {
           </ThemeProvider>
         </CulturalAdaptationManager>
       </InternationalizationEngine>
-    </I18nProvider>
+      </I18nProvider>
     </FeatureFlagProvider>
+    </I18nextProvider>
   );
 }
