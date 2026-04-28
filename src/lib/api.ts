@@ -1,11 +1,17 @@
+import {
+  API_TIMEOUT_DEFAULT,
+  MAX_RETRIES,
+  RECONNECT_DELAY_MS,
+  STORAGE_KEYS,
+} from '@/constants/app.constants';
 import { ApiError, parseApiError } from '@/utils/error-handler';
 import { ErrorType, ErrorInfo } from '@/utils/errorUtils';
 
 export type { ErrorInfo };
 
-const DEFAULT_TIMEOUT_MS = 10_000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
+const DEFAULT_TIMEOUT_MS = API_TIMEOUT_DEFAULT;
+const API_MAX_RETRIES = MAX_RETRIES;
+const RETRY_DELAY_MS = RECONNECT_DELAY_MS;
 
 /**
  * Request interceptor function type
@@ -86,7 +92,7 @@ class ApiClientImpl {
     this.config = {
       baseURL: config.baseURL || process.env.NEXT_PUBLIC_API_URL || '',
       timeout: config.timeout || DEFAULT_TIMEOUT_MS,
-      maxRetries: config.maxRetries || MAX_RETRIES,
+      maxRetries: config.maxRetries || API_MAX_RETRIES,
       retryDelay: config.retryDelay || RETRY_DELAY_MS,
     };
   }
@@ -148,7 +154,7 @@ class ApiClientImpl {
    */
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
+    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   }
 
   /**
