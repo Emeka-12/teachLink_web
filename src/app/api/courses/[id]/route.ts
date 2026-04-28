@@ -1,19 +1,29 @@
 import { NextResponse } from 'next/server';
-import type { Course, ApiResponse } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
+import { validateBody } from '@/lib/validation';
+import { CourseByIdParamsSchema } from '@/types/api/courses.dto';
+import type { CourseResponseDTO } from '@/types/api/courses.dto';
+
+// ---------------------------------------------------------------------------
+// GET /api/courses/[id]
+// ---------------------------------------------------------------------------
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<ApiResponse<Course>>> {
+): Promise<NextResponse<CourseResponseDTO>> {
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'READ');
   if (rateLimitResponse) {
-    return rateLimitResponse as NextResponse<ApiResponse<Course>>;
+    return rateLimitResponse as NextResponse<CourseResponseDTO>;
   }
 
-  const { id } = await params;
+  const rawParams = await params;
+  const result = validateBody(CourseByIdParamsSchema, rawParams);
+  if (!result.ok) return addHeaders(result.error) as NextResponse<CourseResponseDTO>;
+
+  // Mock course lookup — replace with real DB query
   const course = {
-    id,
+    id: result.data.id,
     title: 'Web3 UX Design Principles',
     description: 'Create intuitive interfaces for decentralized applications',
     instructor: 'Sarah Johnson',
