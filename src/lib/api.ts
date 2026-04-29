@@ -1,3 +1,6 @@
+import { ApiError, parseApiError } from '../utils/error-handler';
+import { ErrorType, ErrorInfo } from '../utils/errorUtils';
+import { API_VERSION_HEADER, DEFAULT_API_VERSION, getVersionedApiPath } from './apiVersioning';
 import {
   API_TIMEOUT_DEFAULT,
   MAX_RETRIES,
@@ -58,6 +61,7 @@ export interface ApiClientConfig {
   timeout?: number;
   maxRetries?: number;
   retryDelay?: number;
+  apiVersion?: string;
   defaultTTL?: number;
 }
 
@@ -122,6 +126,7 @@ class ApiClientImpl {
       timeout: config.timeout || DEFAULT_TIMEOUT_MS,
       maxRetries: config.maxRetries || API_MAX_RETRIES,
       retryDelay: config.retryDelay || RETRY_DELAY_MS,
+      apiVersion: config.apiVersion || DEFAULT_API_VERSION,
       defaultTTL: config.defaultTTL || DEFAULT_TTL_MS,
     };
   }
@@ -241,6 +246,7 @@ class ApiClientImpl {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(config.headers as Record<string, string>),
+      [API_VERSION_HEADER]: this.config.apiVersion,
     };
 
     try {
@@ -249,6 +255,10 @@ class ApiClientImpl {
         headers,
         signal: controller.signal,
       });
+
+      const baseURL = this.config.baseURL.replace(/\/+$/, '');
+      const resolvedUrl = getVersionedApiPath(config.url);
+      const url = baseURL ? `${baseURL}${resolvedUrl}` : resolvedUrl;
 
       const response = await fetch(url, processedConfig);
       clearTimeout(timer);
