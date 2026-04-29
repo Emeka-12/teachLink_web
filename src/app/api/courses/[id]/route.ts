@@ -19,10 +19,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 
 import { edgeLog, CDN_CACHE_HEADERS } from '@/../infra/edge-config';
+import { validateBody } from '@/lib/validation';
+import { CourseByIdParamsSchema } from '@/types/api/courses.dto';
+import type { CourseResponseDTO } from '@/types/api/courses.dto';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+// ---------------------------------------------------------------------------
+// GET /api/courses/[id]
+// ---------------------------------------------------------------------------
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse<CourseResponseDTO>> {
   edgeLog('info', '/api/courses/[id]', 'GET request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'READ');

@@ -13,10 +13,13 @@ export async function GET(request: Request) {
 
 
 import { edgeLog, CDN_CACHE_HEADERS } from '@/../infra/edge-config';
+import { validateQuery } from '@/lib/validation';
+import { CourseListQuerySchema } from '@/types/api/courses.dto';
+import type { CourseListResponseDTO } from '@/types/api/courses.dto';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse<CourseListResponseDTO>> {
   edgeLog('info', '/api/courses', 'GET request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'READ');
@@ -89,3 +92,4 @@ export async function GET(request: Request) {
   response.headers.set('Cache-Control', CDN_CACHE_HEADERS.public);
   return response;
 }
+
