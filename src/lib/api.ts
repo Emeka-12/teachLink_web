@@ -1,13 +1,22 @@
 import { ApiError, parseApiError } from '../utils/error-handler';
 import { ErrorType, ErrorInfo } from '../utils/errorUtils';
 import { API_VERSION_HEADER, DEFAULT_API_VERSION, getVersionedApiPath } from './apiVersioning';
+import {
+  API_TIMEOUT_DEFAULT,
+  MAX_RETRIES,
+  RECONNECT_DELAY_MS,
+  STORAGE_KEYS,
+  API_CACHE_TTL_DEFAULT,
+} from '@/constants/app.constants';
+import { ApiError, parseApiError } from '@/utils/error-handler';
+import { ErrorType, ErrorInfo } from '@/utils/errorUtils';
 
 export type { ErrorInfo };
 
-const DEFAULT_TIMEOUT_MS = 10_000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
-const DEFAULT_TTL_MS = 300_000; // 5 minutes
+const DEFAULT_TIMEOUT_MS = API_TIMEOUT_DEFAULT;
+const API_MAX_RETRIES = MAX_RETRIES;
+const RETRY_DELAY_MS = RECONNECT_DELAY_MS;
+const DEFAULT_TTL_MS = API_CACHE_TTL_DEFAULT;
 
 /**
  * Cache entry structure
@@ -115,7 +124,7 @@ class ApiClientImpl {
     this.config = {
       baseURL: config.baseURL || process.env.NEXT_PUBLIC_API_URL || '',
       timeout: config.timeout || DEFAULT_TIMEOUT_MS,
-      maxRetries: config.maxRetries || MAX_RETRIES,
+      maxRetries: config.maxRetries || API_MAX_RETRIES,
       retryDelay: config.retryDelay || RETRY_DELAY_MS,
       apiVersion: config.apiVersion || DEFAULT_API_VERSION,
       defaultTTL: config.defaultTTL || DEFAULT_TTL_MS,
@@ -179,7 +188,7 @@ class ApiClientImpl {
    */
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
+    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   }
 
   /**
@@ -199,7 +208,7 @@ class ApiClientImpl {
   private async requestWithRetry<T>(config: RequestConfig, attempt = 1): Promise<T> {
     const token = this.getToken();
     const url = this.config.baseURL ? `${this.config.baseURL}${config.url}` : config.url;
-    
+
     // Include token in cache key to prevent cross-user cache leakage (security best practice)
     const cacheKey = `${url}:${token || 'anonymous'}`;
 
@@ -332,7 +341,11 @@ class ApiClientImpl {
   /**
    * POST request – automatically invalidates the cache entry for this URL on success.
    */
-  async post<T>(url: string, body?: unknown, options?: Omit<RequestConfig, 'url' | 'method'>): Promise<T> {
+  async post<T>(
+    url: string,
+    body?: unknown,
+    options?: Omit<RequestConfig, 'url' | 'method'>,
+  ): Promise<T> {
     return this.requestWithRetry<T>({
       ...options,
       url,
@@ -344,7 +357,11 @@ class ApiClientImpl {
   /**
    * PATCH request – automatically invalidates the cache entry for this URL on success.
    */
-  async patch<T>(url: string, body?: unknown, options?: Omit<RequestConfig, 'url' | 'method'>): Promise<T> {
+  async patch<T>(
+    url: string,
+    body?: unknown,
+    options?: Omit<RequestConfig, 'url' | 'method'>,
+  ): Promise<T> {
     return this.requestWithRetry<T>({
       ...options,
       url,
@@ -356,7 +373,11 @@ class ApiClientImpl {
   /**
    * PUT request – automatically invalidates the cache entry for this URL on success.
    */
-  async put<T>(url: string, body?: unknown, options?: Omit<RequestConfig, 'url' | 'method'>): Promise<T> {
+  async put<T>(
+    url: string,
+    body?: unknown,
+    options?: Omit<RequestConfig, 'url' | 'method'>,
+  ): Promise<T> {
     return this.requestWithRetry<T>({
       ...options,
       url,
