@@ -2,7 +2,7 @@
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
+import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, NetworkFirst, CacheFirst } from 'workbox-strategies';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 
@@ -18,19 +18,19 @@ const offlineFallbackPage = '/offline.html';
 
 // Set up App Shell-style routing
 const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
-registerRoute(({ request, url }: { request: Request; url: URL }) => {
-  if (request.mode !== 'navigate') return false;
-  if (url.pathname.startsWith('/_')) return false;
-  if (url.pathname.match(fileExtensionRegexp)) return false;
-  return true;
-}, createHandlerBoundToURL('/index.html'));
-
-// Navigation fallback for offline
 registerRoute(
   ({ request, url }: { request: Request; url: URL }) => {
     if (request.mode !== 'navigate') return false;
+    if (url.pathname.startsWith('/_')) return false;
+    if (url.pathname.match(fileExtensionRegexp)) return false;
     return true;
   },
+  createHandlerBoundToURL('/index.html'),
+);
+
+// Navigation fallback for offline
+registerRoute(
+  ({ request }: { request: Request }) => request.mode === 'navigate',
   async () => {
     try {
       const response = await fetch(offlineFallbackPage);
@@ -39,7 +39,7 @@ registerRoute(
         await cache.put(offlineFallbackPage, response.clone());
         return response;
       }
-    } catch (error) {
+    } catch {
       const cache = await caches.open('offline-fallback');
       const cachedResponse = await cache.match(offlineFallbackPage);
       if (cachedResponse) return cachedResponse;
@@ -70,7 +70,8 @@ registerRoute(
 
 registerRoute(
   ({ url }) =>
-    url.origin === self.location.origin && url.pathname.match(/\.(jpg|jpeg|svg|gif|webp)$/),
+    url.origin === self.location.origin &&
+    url.pathname.match(/\.(jpg|jpeg|svg|gif|webp)$/),
   new CacheFirst({
     cacheName: 'images-ext',
     plugins: [new ExpirationPlugin({ maxEntries: 100 })],
@@ -85,7 +86,12 @@ registerRoute(
     url.hostname === 'static.vecteezy.com',
   new StaleWhileRevalidate({
     cacheName: 'external-images',
-    plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 })],
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      }),
+    ],
   }),
 );
 
@@ -94,7 +100,12 @@ registerRoute(
   ({ url }) => url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'api-responses',
-    plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 })],
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 24 * 60 * 60,
+      }),
+    ],
   }),
 );
 
@@ -103,7 +114,12 @@ registerRoute(
   ({ url }) => url.pathname.match(/\.(woff2?|ttf|otf|eot)$/),
   new CacheFirst({
     cacheName: 'fonts',
-    plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 })],
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 20,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
+      }),
+    ],
   }),
 );
 
@@ -118,13 +134,10 @@ registerRoute(
   'POST',
 );
 
-// Handle sync events for background sync
+// Handle sync events
 self.addEventListener('sync', (event: SyncEvent) => {
   if (event.tag === 'teachLinkSyncQueue') {
-    event.waitUntil(
-      // Sync logic handled by the queue
-      Promise.resolve(),
-    );
+    event.waitUntil(Promise.resolve());
   }
 });
 
@@ -136,5 +149,9 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clientsClaim() as any);
+  event.waitUntil(
+    Promise.resolve().then(() => {
+      clientsClaim();
+    }),
+  );
 });

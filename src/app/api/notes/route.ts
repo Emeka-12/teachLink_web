@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { VideoNote } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
 import { edgeLog } from '@/../infra/edge-config';
+
 import { validateBody, validateQuery } from '@/lib/validation';
 import {
   NotesGetQuerySchema,
@@ -29,13 +30,14 @@ const keyFor = (userId: string | undefined, lessonId: string): string => {
 };
 
 // ---------------------------------------------------------------------------
-// GET /api/notes?lessonId=&userId=
+// GET /api/notes
 // ---------------------------------------------------------------------------
 
 export async function GET(
   request: Request,
-): Promise<NextResponse<NotesListResponseDTO | NotesSuccessResponseDTO>> {
+): Promise<NextResponse<NotesListResponseDTO>> {
   edgeLog('info', '/api/notes', 'GET request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -57,8 +59,9 @@ export async function GET(
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<NoteResponseDTO | NotesSuccessResponseDTO>> {
+): Promise<NextResponse<NoteResponseDTO>> {
   edgeLog('info', '/api/notes', 'POST request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -66,6 +69,7 @@ export async function POST(
   if (!result.ok) return addHeaders(result.error) as NextResponse;
 
   const now = new Date().toISOString();
+
   const persisted: VideoNote = {
     id: result.data.note.id ?? `note-${Date.now()}`,
     time: result.data.note.time,
@@ -76,17 +80,26 @@ export async function POST(
 
   const key = keyFor(result.data.userId, result.data.lessonId);
   const prev = notesStore.get(key) ?? [];
+
   notesStore.set(key, [persisted, ...prev.filter((n) => n.id !== persisted.id)]);
 
-  return addHeaders(NextResponse.json({ success: true, data: persisted }));
+  return addHeaders(
+    NextResponse.json({
+      success: true,
+      data: persisted,
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
 // PATCH /api/notes
 // ---------------------------------------------------------------------------
 
-export async function PATCH(request: Request): Promise<NextResponse<NotesSuccessResponseDTO>> {
+export async function PATCH(
+  request: Request,
+): Promise<NextResponse<NotesSuccessResponseDTO>> {
   edgeLog('info', '/api/notes', 'PATCH request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -104,7 +117,7 @@ export async function PATCH(request: Request): Promise<NextResponse<NotesSuccess
         ? {
             ...n,
             text: result.data.text,
-            time: result.data.time !== undefined ? result.data.time : n.time,
+            time: result.data.time ?? n.time,
             updatedAt: now,
           }
         : n,
@@ -118,8 +131,11 @@ export async function PATCH(request: Request): Promise<NextResponse<NotesSuccess
 // DELETE /api/notes
 // ---------------------------------------------------------------------------
 
-export async function DELETE(request: Request): Promise<NextResponse<NotesSuccessResponseDTO>> {
+export async function DELETE(
+  request: Request,
+): Promise<NextResponse<NotesSuccessResponseDTO>> {
   edgeLog('info', '/api/notes', 'DELETE request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -128,6 +144,7 @@ export async function DELETE(request: Request): Promise<NextResponse<NotesSucces
 
   const key = keyFor(result.data.userId, result.data.lessonId);
   const prev = notesStore.get(key) ?? [];
+
   notesStore.set(
     key,
     prev.filter((n) => n.id !== result.data.id),
@@ -135,4 +152,3 @@ export async function DELETE(request: Request): Promise<NextResponse<NotesSucces
 
   return addHeaders(NextResponse.json({ success: true }));
 }
-

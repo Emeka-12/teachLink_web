@@ -1,5 +1,23 @@
 import { NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/ratelimit';
+
+import { validateBody } from '@/lib/validation';
+import { CourseByIdParamsSchema } from '@/types/api/courses.dto';
+import type { CourseResponseDTO } from '@/types/api/courses.dto';
+
+// ---------------------------------------------------------------------------
+// GET /api/courses/[id]
+// ---------------------------------------------------------------------------
+
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse<CourseResponseDTO>> {
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+
+
 import { edgeLog, CDN_CACHE_HEADERS } from '@/../infra/edge-config';
 import { validateBody } from '@/lib/validation';
 import { CourseByIdParamsSchema } from '@/types/api/courses.dto';
@@ -16,6 +34,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CourseResponseDTO>> {
   edgeLog('info', '/api/courses/[id]', 'GET request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'READ');
   if (rateLimitResponse) {
     return rateLimitResponse as NextResponse<CourseResponseDTO>;

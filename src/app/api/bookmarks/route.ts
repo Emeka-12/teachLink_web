@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { VideoBookmark } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
 import { edgeLog } from '@/../infra/edge-config';
+
 import { validateBody, validateQuery } from '@/lib/validation';
 import {
   BookmarksGetQuerySchema,
@@ -29,13 +30,14 @@ const keyFor = (userId: string | undefined, lessonId: string): string => {
 };
 
 // ---------------------------------------------------------------------------
-// GET /api/bookmarks?lessonId=&userId=
+// GET /api/bookmarks
 // ---------------------------------------------------------------------------
 
 export async function GET(
   request: Request,
-): Promise<NextResponse<BookmarksListResponseDTO | BookmarksSuccessResponseDTO>> {
+): Promise<NextResponse<BookmarksListResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'GET request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -57,8 +59,9 @@ export async function GET(
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<BookmarkResponseDTO | BookmarksSuccessResponseDTO>> {
+): Promise<NextResponse<BookmarkResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'POST request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -66,6 +69,7 @@ export async function POST(
   if (!result.ok) return addHeaders(result.error) as NextResponse;
 
   const now = new Date().toISOString();
+
   const persisted: VideoBookmark = {
     id: result.data.bookmark.id ?? `bookmark-${Date.now()}`,
     time: result.data.bookmark.time,
@@ -77,17 +81,26 @@ export async function POST(
 
   const key = keyFor(result.data.userId, result.data.lessonId);
   const prev = bookmarksStore.get(key) ?? [];
+
   bookmarksStore.set(key, [persisted, ...prev.filter((b) => b.id !== persisted.id)]);
 
-  return addHeaders(NextResponse.json({ success: true, data: persisted }));
+  return addHeaders(
+    NextResponse.json({
+      success: true,
+      data: persisted,
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
 // PATCH /api/bookmarks
 // ---------------------------------------------------------------------------
 
-export async function PATCH(request: Request): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
+export async function PATCH(
+  request: Request,
+): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'PATCH request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -106,7 +119,7 @@ export async function PATCH(request: Request): Promise<NextResponse<BookmarksSuc
             ...b,
             title: result.data.title,
             note: result.data.note,
-            time: result.data.time !== undefined ? result.data.time : b.time,
+            time: result.data.time ?? b.time,
             updatedAt: now,
           }
         : b,
@@ -120,8 +133,11 @@ export async function PATCH(request: Request): Promise<NextResponse<BookmarksSuc
 // DELETE /api/bookmarks
 // ---------------------------------------------------------------------------
 
-export async function DELETE(request: Request): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
+export async function DELETE(
+  request: Request,
+): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'DELETE request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -130,6 +146,7 @@ export async function DELETE(request: Request): Promise<NextResponse<BookmarksSu
 
   const key = keyFor(result.data.userId, result.data.lessonId);
   const prev = bookmarksStore.get(key) ?? [];
+
   bookmarksStore.set(
     key,
     prev.filter((b) => b.id !== result.data.id),
@@ -137,4 +154,3 @@ export async function DELETE(request: Request): Promise<NextResponse<BookmarksSu
 
   return addHeaders(NextResponse.json({ success: true }));
 }
-

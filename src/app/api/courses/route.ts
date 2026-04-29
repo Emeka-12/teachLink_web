@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { Course, PaginatedResponse } from '@/types/api';
 import { withRateLimit } from '@/lib/ratelimit';
+
+import { validateQuery } from '@/lib/validation';
+import { CourseListQuerySchema } from '@/types/api/courses.dto';
+import type { CourseListResponseDTO } from '@/types/api/courses.dto';
+
+
+export async function GET(request: Request): Promise<NextResponse<CourseListResponseDTO>> {
+
+export async function GET(request: Request) {
+
+
 import { edgeLog, CDN_CACHE_HEADERS } from '@/../infra/edge-config';
 import { validateQuery } from '@/lib/validation';
 import { CourseListQuerySchema } from '@/types/api/courses.dto';
@@ -10,6 +21,7 @@ export const runtime = 'edge';
 
 export async function GET(request: Request): Promise<NextResponse<CourseListResponseDTO>> {
   edgeLog('info', '/api/courses', 'GET request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'READ');
   if (rateLimitResponse) {
     return rateLimitResponse as NextResponse<CourseListResponseDTO>;

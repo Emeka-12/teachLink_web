@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/ratelimit';
-import { edgeLog } from '@/../infra/edge-config';
 import { validateBody } from '@/lib/validation';
 import { LoginRequestSchema } from '@/types/api/auth.dto';
 import type { AuthResponseDTO, AuthErrorDTO } from '@/types/api/auth.dto';
+import { edgeLog } from '@/../infra/edge-config';
 
 export const runtime = 'edge';
 
@@ -15,6 +15,7 @@ export async function POST(
   request: NextRequest,
 ): Promise<NextResponse<AuthResponseDTO | AuthErrorDTO>> {
   edgeLog('info', '/api/auth/login', 'POST request received');
+
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'AUTH');
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
 
@@ -56,9 +57,14 @@ export async function POST(
       );
     }
 
-    return addHeaders(NextResponse.json({ message: 'Invalid email or password' }, { status: 401 }));
+    return addHeaders(
+      NextResponse.json({ message: 'Invalid email or password' }, { status: 401 }),
+    );
   } catch (error) {
     console.error('Login error:', error);
-    return addHeaders(NextResponse.json({ message: 'Internal server error' }, { status: 500 }));
+
+    return addHeaders(
+      NextResponse.json({ message: 'Internal server error' }, { status: 500 }),
+    );
   }
 }
