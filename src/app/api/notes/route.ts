@@ -26,9 +26,7 @@ const keyFor = (userId: string | undefined, lessonId: string): string => {
   return `${safeUserId}::${encodeURIComponent(lessonId)}`;
 };
 
-export async function GET(
-  request: Request,
-): Promise<NextResponse<NotesListResponseDTO>> {
+export async function GET(request: Request): Promise<NextResponse<NotesListResponseDTO>> {
   edgeLog('info', '/api/notes', 'GET request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -46,9 +44,7 @@ export async function GET(
   );
 }
 
-export async function POST(
-  request: Request,
-): Promise<NextResponse<NoteResponseDTO>> {
+export async function POST(request: Request): Promise<NextResponse<NoteResponseDTO>> {
   edgeLog('info', '/api/notes', 'POST request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -90,9 +86,7 @@ export async function POST(
   return response;
 }
 
-export async function PATCH(
-  request: Request,
-): Promise<NextResponse<NotesSuccessResponseDTO>> {
+export async function PATCH(request: Request): Promise<NextResponse<NotesSuccessResponseDTO>> {
   edgeLog('info', '/api/notes', 'PATCH request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -131,9 +125,7 @@ export async function PATCH(
   return response;
 }
 
-export async function DELETE(
-  request: Request,
-): Promise<NextResponse<NotesSuccessResponseDTO>> {
+export async function DELETE(request: Request): Promise<NextResponse<NotesSuccessResponseDTO>> {
   edgeLog('info', '/api/notes', 'DELETE request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');

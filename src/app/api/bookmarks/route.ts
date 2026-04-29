@@ -26,9 +26,7 @@ const keyFor = (userId: string | undefined, lessonId: string): string => {
   return `${safeUserId}::${encodeURIComponent(lessonId)}`;
 };
 
-export async function GET(
-  request: Request,
-): Promise<NextResponse<BookmarksListResponseDTO>> {
+export async function GET(request: Request): Promise<NextResponse<BookmarksListResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'GET request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -46,9 +44,7 @@ export async function GET(
   );
 }
 
-export async function POST(
-  request: Request,
-): Promise<NextResponse<BookmarkResponseDTO>> {
+export async function POST(request: Request): Promise<NextResponse<BookmarkResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'POST request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -91,9 +87,7 @@ export async function POST(
   return response;
 }
 
-export async function PATCH(
-  request: Request,
-): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
+export async function PATCH(request: Request): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'PATCH request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
@@ -133,9 +127,7 @@ export async function PATCH(
   return response;
 }
 
-export async function DELETE(
-  request: Request,
-): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
+export async function DELETE(request: Request): Promise<NextResponse<BookmarksSuccessResponseDTO>> {
   edgeLog('info', '/api/bookmarks', 'DELETE request received');
 
   const { addHeaders, rateLimitResponse } = withRateLimit(request, 'WRITE');
