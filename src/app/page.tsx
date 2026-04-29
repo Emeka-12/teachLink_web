@@ -84,6 +84,7 @@ export default function Home() {
               progress={68}
               timeRemaining="12h remaining"
               imageUrl="https://thumbs.dreamstime.com/b/matrix-style-digital-rain-green-binary-code-falling-downward-direction-abstract-background-depicting-effect-stream-397887374.jpg"
+              courseHref="/video-player-demo"
             />
 
             {/* Card 2 - Security */}
@@ -94,6 +95,7 @@ export default function Home() {
               progress={45}
               timeRemaining="12h remaining"
               imageUrl="https://static.vecteezy.com/system/resources/previews/053/715/379/non_2x/abstract-green-digital-rain-with-matrix-code-in-futuristic-cyber-background-perfect-for-technology-and-data-themed-visuals-png.png"
+              courseHref="/video-player-demo"
             />
 
             {/* Card 3 - Scaling */}
@@ -104,6 +106,7 @@ export default function Home() {
               progress={12}
               timeRemaining="12h remaining"
               imageUrl="https://thumbs.dreamstime.com/b/futuristic-laptop-glowing-digital-waves-emerging-screen-dark-setting-399809314.jpg"
+              courseHref="/video-player-demo"
             />
           </div>
         </div>
