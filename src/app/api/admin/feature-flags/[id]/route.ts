@@ -3,6 +3,9 @@ import { flagStore, createAuditEntry } from '@/lib/feature-flags/store';
 import type { FeatureFlag, TargetingRule } from '@/lib/feature-flags/store';
 import { withRateLimit } from '@/lib/ratelimit';
 import { logAuditMutation } from '@/middleware/audit';
+import { edgeLog } from '@/../infra/edge-config';
+
+export const runtime = 'edge';
 
 // ─── GET /api/admin/feature-flags/[id] ───────────────────────────────────────
 
@@ -10,6 +13,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  edgeLog('info', '/api/admin/feature-flags/[id]', 'GET request received');
   const { addHeaders, rateLimitResponse } = withRateLimit(req, 'READ');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -24,6 +28,7 @@ export async function GET(
 // Full or partial update. Also handles toggle via { enabled: boolean }.
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  edgeLog('info', '/api/admin/feature-flags/[id]', 'PUT request received');
   const { addHeaders, rateLimitResponse } = withRateLimit(req, 'AUTH');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -73,6 +78,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // ─── DELETE /api/admin/feature-flags/[id] ────────────────────────────────────
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  edgeLog('info', '/api/admin/feature-flags/[id]', 'DELETE request received');
   const { addHeaders, rateLimitResponse } = withRateLimit(req, 'AUTH');
   if (rateLimitResponse) return rateLimitResponse;
 
